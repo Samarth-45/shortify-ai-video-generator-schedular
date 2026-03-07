@@ -27,7 +27,10 @@ import {
   Globe,
   Shield,
   HeartHandshake,
+  LayoutDashboard,
 } from "lucide-react";
+import Link from "next/link";
+import { SignInButton, SignUpButton, UserButton, Show } from "@clerk/nextjs";
 
 /* ───────────────────────── NAVBAR ───────────────────────── */
 function Navbar() {
@@ -57,17 +60,41 @@ function Navbar() {
           ))}
         </div>
 
-        {/* CTA */}
+        {/* Auth CTA */}
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            className="text-zinc-400 hover:text-white hover:bg-white/5"
-          >
-            Sign In
-          </Button>
-          <Button className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-lg shadow-violet-500/25">
-            Get Started
-          </Button>
+          <Show when="signed-out">
+            <SignInButton>
+              <Button
+                variant="ghost"
+                className="text-zinc-400 hover:text-white hover:bg-white/5"
+              >
+                Sign In
+              </Button>
+            </SignInButton>
+            <SignUpButton>
+              <Button className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-lg shadow-violet-500/25">
+                Get Started
+              </Button>
+            </SignUpButton>
+          </Show>
+          <Show when="signed-in">
+            <Link href="/dashboard">
+              <Button
+                variant="ghost"
+                className="text-zinc-400 hover:text-white hover:bg-white/5 gap-2"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </Button>
+            </Link>
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "h-9 w-9",
+                },
+              }}
+            />
+          </Show>
         </div>
       </div>
     </nav>
@@ -126,13 +153,28 @@ function Hero() {
 
         {/* CTA Buttons */}
         <div className="animate-fade-in-up stagger-3 mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <Button
-            size="lg"
-            className="h-12 px-8 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-lg shadow-violet-500/25 text-base"
-          >
-            Start Creating Free
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
+          <Show when="signed-out">
+            <SignUpButton>
+              <Button
+                size="lg"
+                className="h-12 px-8 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-lg shadow-violet-500/25 text-base"
+              >
+                Start Creating Free
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </SignUpButton>
+          </Show>
+          <Show when="signed-in">
+            <Link href="/dashboard">
+              <Button
+                size="lg"
+                className="h-12 px-8 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-lg shadow-violet-500/25 text-base"
+              >
+                Go to Dashboard
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </Link>
+          </Show>
           <Button
             variant="outline"
             size="lg"
@@ -474,8 +516,8 @@ function Pricing() {
             <Card
               key={i}
               className={`relative overflow-hidden border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 ${plan.popular
-                  ? "border-violet-500/30 shadow-lg shadow-violet-500/10 scale-105"
-                  : ""
+                ? "border-violet-500/30 shadow-lg shadow-violet-500/10 scale-105"
+                : ""
                 }`}
             >
               {plan.popular && (
@@ -513,8 +555,8 @@ function Pricing() {
               <CardFooter>
                 <Button
                   className={`w-full ${plan.popular
-                      ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-lg shadow-violet-500/25"
-                      : "bg-zinc-800 text-white hover:bg-zinc-700 border-0"
+                    ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-lg shadow-violet-500/25"
+                    : "bg-zinc-800 text-white hover:bg-zinc-700 border-0"
                     }`}
                   size="lg"
                 >
@@ -551,13 +593,28 @@ function CTASection() {
           AI-powered video generation and automated scheduling.
         </p>
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <Button
-            size="lg"
-            className="h-14 px-10 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-lg shadow-violet-500/25 text-base"
-          >
-            Get Started for Free
-            <ArrowRight className="ml-1 h-5 w-5" />
-          </Button>
+          <Show when="signed-out">
+            <SignUpButton>
+              <Button
+                size="lg"
+                className="h-14 px-10 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-lg shadow-violet-500/25 text-base"
+              >
+                Get Started for Free
+                <ArrowRight className="ml-1 h-5 w-5" />
+              </Button>
+            </SignUpButton>
+          </Show>
+          <Show when="signed-in">
+            <Link href="/dashboard">
+              <Button
+                size="lg"
+                className="h-14 px-10 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-lg shadow-violet-500/25 text-base"
+              >
+                Go to Dashboard
+                <ArrowRight className="ml-1 h-5 w-5" />
+              </Button>
+            </Link>
+          </Show>
         </div>
         <p className="mt-4 text-sm text-zinc-500">
           No credit card required · Free plan available · Cancel anytime
