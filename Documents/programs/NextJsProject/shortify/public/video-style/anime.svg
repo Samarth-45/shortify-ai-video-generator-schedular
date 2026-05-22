@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 16" fill="none">
+  <rect width="9" height="16" fill="#ecfdf5"/>
+  <rect y="9" width="9" height="7" fill="#a7f3d0"/>
+  <circle cx="4.5" cy="4.8" r="2.2" fill="#34d399"/>
+  <text x="4.5" y="13.2" text-anchor="middle" fill="#065f46" font-family="system-ui,sans-serif" font-size="0.55" font-weight="600">Anime</text>
+</svg>

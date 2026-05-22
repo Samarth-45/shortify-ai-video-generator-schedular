@@ -2,6 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { syncUserToSupabase } from "@/app/actions/sync-user";
 import { Film, Plus, TrendingUp, Eye } from "lucide-react";
+import Link from "next/link";
 
 export default async function DashboardPage() {
     const user = await currentUser();
@@ -10,7 +11,7 @@ export default async function DashboardPage() {
         redirect("/sign-in");
     }
 
-    // Sync user to Supabase on every dashboard visit (idempotent)
+    // Sync user to Supabase on every dashboard visit (idempotent; non-blocking)
     await syncUserToSupabase();
 
     return (
@@ -89,9 +90,11 @@ export default async function DashboardPage() {
                     Quick Actions
                 </h2>
                 <div className="flex flex-wrap gap-3">
-                    <button className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:from-violet-500 hover:to-fuchsia-500 shadow-md shadow-violet-500/20">
-                        + Create New Series
-                    </button>
+                    <Link href="/dashboard/create">
+                        <button className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:from-violet-500 hover:to-fuchsia-500 shadow-md shadow-violet-500/20">
+                            + Create New Series
+                        </button>
+                    </Link>
                     <button className="rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 shadow-sm">
                         Upload Video
                     </button>

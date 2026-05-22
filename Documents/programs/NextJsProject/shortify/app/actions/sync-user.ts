@@ -2,6 +2,7 @@
 
 import { currentUser } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatSupabaseError } from "@/lib/supabase/format-error";
 
 export async function syncUserToSupabase() {
     const user = await currentUser();
@@ -10,14 +11,26 @@ export async function syncUserToSupabase() {
         return { success: false, error: "Not authenticated" };
     }
 
-    const supabase = createAdminClient();
+    let supabase;
+    try {
+        supabase = createAdminClient();
+    } catch (err) {
+        return {
+            success: false,
+            error: err instanceof Error ? err.message : "Supabase not configured",
+        };
+    }
 
-    // Check if user already exists
-    const { data: existingUser } = await supabase
+    // Check if user already exists (id = Clerk user id)
+    const { data: existingUser, error: lookupError } = await supabase
         .from("users")
         .select("id")
-        .eq("user_id", user.id)
-        .single();
+        .eq("id", user.id)
+        .maybeSingle();
+
+    if (lookupError) {
+        return { success: false, error: formatSupabaseError(lookupError) };
+    }
 
     if (existingUser) {
         return { success: true, message: "User already exists" };
@@ -32,18 +45,15 @@ export async function syncUserToSupabase() {
         return { success: false, error: "No email found" };
     }
 
-    const { error } = await supabase.from("users").insert({
-        user_id: user.id,
+    const { error: insertError } = await supabase.from("users").insert({
+        id: user.id,
         name,
         email,
-        credits: 0,
     });
 
-    if (error) {
-        console.error("Supabase insert error:", error);
-        return { success: false, error: error.message };
+    if (insertError) {
+        return { success: false, error: formatSupabaseError(insertError) };
     }
 
-    console.log(`User synced to Supabase: ${email}`);
     return { success: true, message: "User created" };
 }
