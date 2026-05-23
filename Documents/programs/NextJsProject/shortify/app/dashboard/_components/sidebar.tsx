@@ -45,10 +45,12 @@ export function DashboardSidebar() {
 
             {/* ── Create Button ── */}
             <div className="px-4 pt-5 pb-2">
-                <Button className="w-full justify-center gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-md shadow-violet-500/20 h-11 text-[0.9rem] font-semibold rounded-xl">
-                    <Plus className="h-[18px] w-[18px]" />
-                    Create New Series
-                </Button>
+                <Link href="/dashboard/create">
+                    <Button className="w-full justify-center gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 border-0 shadow-md shadow-violet-500/20 h-11 text-[0.9rem] font-semibold rounded-xl">
+                        <Plus className="h-[18px] w-[18px]" />
+                        Create New Series
+                    </Button>
+                </Link>
             </div>
 
             {/* ── Navigation ── */}

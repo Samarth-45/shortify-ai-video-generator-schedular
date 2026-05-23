@@ -120,6 +120,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -127,34 +128,73 @@
 
 /* Custom animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
 }
 
 @keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .animate-float {
@@ -183,19 +223,166 @@
 }
 
 /* Stagger children animation delays */
-.stagger-1 { animation-delay: 0.1s; }
-.stagger-2 { animation-delay: 0.2s; }
-.stagger-3 { animation-delay: 0.3s; }
-.stagger-4 { animation-delay: 0.4s; }
-.stagger-5 { animation-delay: 0.5s; }
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+
+.stagger-4 {
+  animation-delay: 0.4s;
+}
+
+.stagger-5 {
+  animation-delay: 0.5s;
+}
 
 /* Custom scrollbar */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 ::-webkit-scrollbar-thumb {
   background: oklch(0.5 0 0 / 30%);
   border-radius: 999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.5 0 0 / 50%);
 }
+
+/* Light scrollbar for dashboard containers */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
+
+/* ── Caption style previews (form + mirrors Remotion animation types) ── */
+@keyframes caption-karaoke-highlight {
+  0%, 100% { color: #ffffff; text-shadow: 0 0 0 transparent; }
+  15%, 35% { color: #facc15; text-shadow: 0 0 12px rgba(250, 204, 21, 0.6); }
+}
+
+@keyframes caption-bounce-in {
+  0% { opacity: 0; transform: translateY(12px) scale(0.85); }
+  55% { opacity: 1; transform: translateY(-4px) scale(1.05); }
+  75% { transform: translateY(2px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes caption-typewriter-width {
+  0% { max-width: 0; }
+  100% { max-width: 100%; }
+}
+
+@keyframes caption-typewriter-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes caption-pop-in {
+  0% { opacity: 0; transform: scale(0.3); }
+  70% { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes caption-fade-up {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes caption-neon-pulse {
+  0%, 100% {
+    color: #22d3ee;
+    text-shadow: 0 0 8px #22d3ee, 0 0 16px #06b6d4;
+  }
+  50% {
+    color: #67e8f9;
+    text-shadow: 0 0 14px #22d3ee, 0 0 28px #06b6d4, 0 0 40px #0891b2;
+  }
+}
+
+.caption-preview-karaoke .caption-preview-word {
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  animation: caption-karaoke-highlight 2.4s ease-in-out infinite;
+}
+.caption-preview-karaoke .caption-preview-word:nth-child(1) { animation-delay: 0s; }
+.caption-preview-karaoke .caption-preview-word:nth-child(2) { animation-delay: 0.4s; }
+.caption-preview-karaoke .caption-preview-word:nth-child(3) { animation-delay: 0.8s; }
+
+.caption-preview-bounce .caption-preview-word {
+  color: #fbbf24;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  animation: caption-bounce-in 1.8s ease-out infinite;
+}
+.caption-preview-bounce .caption-preview-word:nth-child(1) { animation-delay: 0s; }
+.caption-preview-bounce .caption-preview-word:nth-child(2) { animation-delay: 0.25s; }
+.caption-preview-bounce .caption-preview-word:nth-child(3) { animation-delay: 0.5s; }
+
+.caption-preview-typewriter .caption-typewriter-line {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 0;
+  color: #a7f3d0;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 4px 8px;
+  border-radius: 6px;
+  animation: caption-typewriter-width 2.8s steps(18) infinite;
+}
+.caption-preview-typewriter .caption-typewriter-line::after {
+  content: "|";
+  margin-left: 2px;
+  animation: caption-typewriter-blink 0.8s step-end infinite;
+}
+
+.caption-preview-pop .caption-preview-word {
+  color: #fff;
+  -webkit-text-stroke: 2px #7c3aed;
+  paint-order: stroke fill;
+  text-transform: uppercase;
+  animation: caption-pop-in 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+.caption-preview-pop .caption-preview-word:nth-child(1) { animation-delay: 0s; }
+.caption-preview-pop .caption-preview-word:nth-child(2) { animation-delay: 0.2s; }
+.caption-preview-pop .caption-preview-word:nth-child(3) { animation-delay: 0.4s; }
+
+.caption-preview-fade-up .caption-preview-word {
+  color: #f8fafc;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  animation: caption-fade-up 2s ease-out infinite;
+}
+.caption-preview-fade-up .caption-preview-word:nth-child(1) { animation-delay: 0s; }
+.caption-preview-fade-up .caption-preview-word:nth-child(2) { animation-delay: 0.35s; }
+.caption-preview-fade-up .caption-preview-word:nth-child(3) { animation-delay: 0.7s; }
+
+.caption-preview-neon .caption-preview-word {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  animation: caption-neon-pulse 2s ease-in-out infinite;
+}
+.caption-preview-neon .caption-preview-word:nth-child(2) { animation-delay: 0.15s; }
+.caption-preview-neon .caption-preview-word:nth-child(3) { animation-delay: 0.3s; }
