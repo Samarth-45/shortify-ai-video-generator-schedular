@@ -1,0 +1,72 @@
+import { createAdminClient } from "@/lib/supabase/admin";
+import { mapSeriesFromDb, type SeriesRecord, type SeriesRow } from "@/lib/series";
+
+export async function fetchSeriesForUser(
+    clerkUserId: string
+): Promise<{ series: SeriesRecord[]; error: string | null }> {
+    let supabase;
+    try {
+        supabase = createAdminClient();
+    } catch (err) {
+        return {
+            series: [],
+            error:
+                err instanceof Error
+                    ? err.message
+                    : "Database not configured",
+        };
+    }
+
+    const { data, error } = await supabase
+        .from("series")
+        .select("*")
+        .eq("clerk_user_id", clerkUserId)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        return { series: [], error: error.message };
+    }
+
+    return {
+        series: (data as SeriesRow[]).map(mapSeriesFromDb),
+        error: null,
+    };
+}
+
+export async function fetchSeriesById(
+    seriesId: string,
+    clerkUserId: string
+): Promise<{ series: SeriesRecord | null; error: string | null }> {
+    let supabase;
+    try {
+        supabase = createAdminClient();
+    } catch (err) {
+        return {
+            series: null,
+            error:
+                err instanceof Error
+                    ? err.message
+                    : "Database not configured",
+        };
+    }
+
+    const { data, error } = await supabase
+        .from("series")
+        .select("*")
+        .eq("id", seriesId)
+        .eq("clerk_user_id", clerkUserId)
+        .maybeSingle();
+
+    if (error) {
+        return { series: null, error: error.message };
+    }
+
+    if (!data) {
+        return { series: null, error: null };
+    }
+
+    return {
+        series: mapSeriesFromDb(data as SeriesRow),
+        error: null,
+    };
+}

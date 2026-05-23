@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ProgressStepper } from "./_components/progress-stepper";
 import { NicheSelection } from "./_components/niche-selection";
 import { LanguageVoiceSelection } from "./_components/language-voice-selection";
@@ -12,20 +12,13 @@ import { BackgroundMusicSelection } from "./_components/background-music-selecti
 import { CaptionStyleSelection } from "./_components/caption-style-selection";
 import { SeriesDetailsForm } from "./_components/series-details-form";
 import { StepFooter } from "./_components/step-footer";
+import {
+    seriesRecordToFormData,
+    type SeriesFormData,
+    type SeriesRecord,
+} from "@/lib/series";
 
-// ── Global form state for all steps ──
-export interface SeriesFormData {
-    niche: string | null;
-    language: string | null;
-    voice: string | null;
-    videoStyle: string | null;
-    backgroundMusic: string[];
-    captionStyle: string | null;
-    seriesName: string;
-    videoDuration: string | null;
-    platforms: string[];
-    publishTime: string | null;
-}
+export type { SeriesFormData };
 
 const TOTAL_STEPS = 6;
 
@@ -42,11 +35,65 @@ const initialFormData: SeriesFormData = {
     publishTime: null,
 };
 
-export default function CreateSeriesPage() {
+function CreateSeriesForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const editId = searchParams.get("edit");
+
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState<SeriesFormData>(initialFormData);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [isLoadingSeries, setIsLoadingSeries] = useState(!!editId);
+    const [loadError, setLoadError] = useState<string | null>(null);
+
+    const isEditMode = !!editId;
+
+    const loadSeries = useCallback(async () => {
+        if (!editId) {
+            setFormData(initialFormData);
+            setIsLoadingSeries(false);
+            setLoadError(null);
+            return;
+        }
+
+        setIsLoadingSeries(true);
+        setLoadError(null);
+
+        try {
+            const res = await fetch(`/api/series/${editId}`, {
+                cache: "no-store",
+            });
+            const payload = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                throw new Error(
+                    typeof payload.error === "string"
+                        ? payload.error
+                        : "Failed to load series"
+                );
+            }
+
+            const series = payload.series as SeriesRecord | undefined;
+            if (!series) {
+                throw new Error("Series not found");
+            }
+
+            setFormData(seriesRecordToFormData(series));
+            setCurrentStep(1);
+        } catch (err) {
+            setLoadError(
+                err instanceof Error ? err.message : "Failed to load series"
+            );
+            setFormData(initialFormData);
+        } finally {
+            setIsLoadingSeries(false);
+        }
+    }, [editId]);
+
+    useEffect(() => {
+        loadSeries();
+    }, [loadSeries]);
 
     const updateFormData = <K extends keyof SeriesFormData>(
         key: K,
@@ -87,29 +134,91 @@ export default function CreateSeriesPage() {
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
+        setSubmitError(null);
         try {
-            // TODO: call API route to save series to Supabase
-            await new Promise((res) => setTimeout(res, 1500));
-            router.push("/dashboard?created=1");
+            const url = isEditMode ? `/api/series/${editId}` : "/api/series";
+            const method = isEditMode ? "PATCH" : "POST";
+
+            const res = await fetch(url, {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+
+            const payload = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                throw new Error(
+                    typeof payload.error === "string"
+                        ? payload.error
+                        : isEditMode
+                          ? "Failed to update series"
+                          : "Failed to schedule series"
+                );
+            }
+
+            router.push(
+                isEditMode ? "/dashboard?updated=1" : "/dashboard?created=1"
+            );
         } catch (err) {
-            console.error("Failed to create series:", err);
+            console.error("Failed to save series:", err);
+            setSubmitError(
+                err instanceof Error
+                    ? err.message
+                    : isEditMode
+                      ? "Failed to update series"
+                      : "Failed to schedule series"
+            );
             setIsSubmitting(false);
         }
     };
 
     const canContinue = (() => {
         switch (currentStep) {
-            case 1: return !!formData.niche;
-            case 2: return !!formData.language && !!formData.voice;
-            case 3: return !!formData.videoStyle;
-            case 4: return formData.backgroundMusic.length > 0;
-            case 5: return !!formData.captionStyle;
-            case 6: return false; // final step uses Schedule button
-            default: return false;
+            case 1:
+                return !!formData.niche;
+            case 2:
+                return !!formData.language && !!formData.voice;
+            case 3:
+                return !!formData.videoStyle;
+            case 4:
+                return formData.backgroundMusic.length > 0;
+            case 5:
+                return !!formData.captionStyle;
+            case 6:
+                return false;
+            default:
+                return false;
         }
     })();
 
     const isLastStep = currentStep === TOTAL_STEPS;
+
+    if (isLoadingSeries) {
+        return (
+            <div className="flex min-h-[40vh] flex-col items-center justify-center text-sm text-gray-500">
+                <Loader2 className="mb-3 h-8 w-8 animate-spin text-violet-600" />
+                Loading series…
+            </div>
+        );
+    }
+
+    if (loadError) {
+        return (
+            <div className="mx-auto max-w-lg space-y-4 py-12 text-center">
+                <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {loadError}
+                </p>
+                <Link
+                    href="/dashboard"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-violet-600 hover:text-violet-700"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to dashboard
+                </Link>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-[calc(100vh-4rem)] pb-12">
@@ -122,10 +231,12 @@ export default function CreateSeriesPage() {
                 </Link>
                 <div>
                     <h1 className="text-xl font-bold text-gray-900">
-                        Create New Series
+                        {isEditMode ? "Edit Series" : "Create New Series"}
                     </h1>
                     <p className="text-sm text-gray-500">
-                        Set up your AI-generated video series in a few simple steps
+                        {isEditMode
+                            ? "Update your series settings across all steps"
+                            : "Set up your AI-generated video series in a few simple steps"}
                     </p>
                 </div>
             </div>
@@ -146,7 +257,9 @@ export default function CreateSeriesPage() {
                     <LanguageVoiceSelection
                         selectedLanguage={formData.language}
                         selectedVoice={formData.voice}
-                        onSelectLanguage={(lang) => updateFormData("language", lang)}
+                        onSelectLanguage={(lang) =>
+                            updateFormData("language", lang)
+                        }
                         onSelectVoice={(voice) => updateFormData("voice", voice)}
                     />
                 )}
@@ -170,8 +283,16 @@ export default function CreateSeriesPage() {
                 {currentStep === 5 && (
                     <CaptionStyleSelection
                         selectedStyle={formData.captionStyle}
-                        onSelect={(style) => updateFormData("captionStyle", style)}
+                        onSelect={(style) =>
+                            updateFormData("captionStyle", style)
+                        }
                     />
+                )}
+
+                {currentStep === 6 && submitError && (
+                    <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {submitError}
+                    </p>
                 )}
 
                 {currentStep === 6 && (
@@ -180,12 +301,19 @@ export default function CreateSeriesPage() {
                         videoDuration={formData.videoDuration}
                         platforms={formData.platforms}
                         publishTime={formData.publishTime}
-                        onSeriesNameChange={(name) => updateFormData("seriesName", name)}
-                        onVideoDurationChange={(d) => updateFormData("videoDuration", d)}
+                        onSeriesNameChange={(name) =>
+                            updateFormData("seriesName", name)
+                        }
+                        onVideoDurationChange={(d) =>
+                            updateFormData("videoDuration", d)
+                        }
                         onTogglePlatform={togglePlatform}
-                        onPublishTimeChange={(t) => updateFormData("publishTime", t)}
+                        onPublishTimeChange={(t) =>
+                            updateFormData("publishTime", t)
+                        }
                         onSchedule={handleSubmit}
                         isSubmitting={isSubmitting}
+                        isEditMode={isEditMode}
                     />
                 )}
             </div>
@@ -212,5 +340,20 @@ export default function CreateSeriesPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function CreateSeriesPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-500">
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin text-violet-600" />
+                    Loading…
+                </div>
+            }
+        >
+            <CreateSeriesForm />
+        </Suspense>
     );
 }

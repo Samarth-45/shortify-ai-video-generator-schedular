@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Ghost,
     Flame,
@@ -133,6 +133,13 @@ export function NicheSelection({
         "available"
     );
     const [customNiche, setCustomNiche] = useState("");
+
+    useEffect(() => {
+        if (selectedNiche?.startsWith("custom:")) {
+            setActiveTab("custom");
+            setCustomNiche(selectedNiche.slice("custom:".length));
+        }
+    }, [selectedNiche]);
 
     return (
         <div className="mx-auto max-w-3xl">

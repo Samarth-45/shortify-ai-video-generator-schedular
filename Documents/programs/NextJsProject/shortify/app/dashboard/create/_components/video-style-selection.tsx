@@ -1,36 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
 import { Check } from "lucide-react";
+import { VideoStyleImage } from "@/components/video-style-image";
 import { VideoStyles } from "../_data/constant";
-
-const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".svg"] as const;
-
-function getNextImageSrc(basePath: string, extIndex: number): string {
-    return `${basePath}${IMAGE_EXTENSIONS[extIndex]}`;
-}
-
-function VideoStyleImage({ basePath, label }: { basePath: string; label: string }) {
-    const [extIndex, setExtIndex] = useState(0);
-    const src = getNextImageSrc(basePath, extIndex);
-
-    return (
-        <Image
-            key={src}
-            src={src}
-            alt={label}
-            fill
-            sizes="180px"
-            className="object-cover object-center"
-            onError={() => {
-                if (extIndex < IMAGE_EXTENSIONS.length - 1) {
-                    setExtIndex((i) => i + 1);
-                }
-            }}
-        />
-    );
-}
 
 interface VideoStyleSelectionProps {
     currentStep: number;

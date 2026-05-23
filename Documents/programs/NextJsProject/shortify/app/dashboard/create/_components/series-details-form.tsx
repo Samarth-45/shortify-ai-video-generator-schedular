@@ -29,6 +29,7 @@ interface SeriesDetailsFormProps {
     onPublishTimeChange: (time: string) => void;
     onSchedule: () => void;
     isSubmitting: boolean;
+    isEditMode?: boolean;
 }
 
 export function SeriesDetailsForm({
@@ -42,6 +43,7 @@ export function SeriesDetailsForm({
     onPublishTimeChange,
     onSchedule,
     isSubmitting,
+    isEditMode = false,
 }: SeriesDetailsFormProps) {
     const canSchedule =
         seriesName.trim().length > 0 &&
@@ -208,12 +210,12 @@ export function SeriesDetailsForm({
                 {isSubmitting ? (
                     <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Scheduling…
+                        {isEditMode ? "Saving…" : "Scheduling…"}
                     </>
                 ) : (
                     <>
                         <Calendar className="h-4 w-4" />
-                        Schedule
+                        {isEditMode ? "Save changes" : "Schedule"}
                     </>
                 )}
             </button>

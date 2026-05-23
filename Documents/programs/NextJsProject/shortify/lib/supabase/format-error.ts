@@ -10,5 +10,16 @@ export function formatSupabaseError(error: PostgrestError | null): string {
         );
     }
 
-    return [error.message, error.details, error.hint].filter(Boolean).join(" — ");
+    const message = [error.message, error.details, error.hint]
+        .filter(Boolean)
+        .join(" — ");
+
+    if (message.includes("series_status_check")) {
+        return (
+            message +
+            " — Run supabase/migrations/20260523120600_add_active_series_status.sql in the Supabase SQL Editor."
+        );
+    }
+
+    return message;
 }
