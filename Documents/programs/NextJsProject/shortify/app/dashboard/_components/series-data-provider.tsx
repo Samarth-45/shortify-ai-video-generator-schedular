@@ -53,6 +53,18 @@ export function SeriesDataProvider({ children }: { children: ReactNode }) {
         refresh();
     }, [refresh]);
 
+    const hasGenerating = series.some((s) => s.status === "generating");
+
+    useEffect(() => {
+        if (!hasGenerating) return;
+
+        const interval = setInterval(() => {
+            void refresh();
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [hasGenerating, refresh]);
+
     return (
         <SeriesDataContext.Provider value={{ series, isLoading, error, refresh }}>
             {children}

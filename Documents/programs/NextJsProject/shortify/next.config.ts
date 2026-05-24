@@ -8,6 +8,20 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: projectRoot,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        protocol: "https",
+        hostname: "replicate.delivery",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

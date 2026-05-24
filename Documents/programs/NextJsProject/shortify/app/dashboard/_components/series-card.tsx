@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSeriesData } from "./series-data-provider";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -33,13 +34,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
 import { getVideoStyleById, getVideoStyleImageBase } from "@/lib/video-style";
 import { isSeriesPaused, type SeriesRecord } from "@/lib/series";
 
@@ -48,12 +42,12 @@ interface SeriesCardProps {
 }
 
 export function SeriesCard({ series }: SeriesCardProps) {
+    const router = useRouter();
     const { refresh: refreshSeries } = useSeriesData();
     const [isGenerating, setIsGenerating] = useState(false);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
-    const [videosOpen, setVideosOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const style = getVideoStyleById(series.videoStyle);
@@ -122,6 +116,7 @@ export function SeriesCard({ series }: SeriesCardProps) {
                 throw new Error(payload.error ?? "Failed to start generation");
             }
             refreshSeries();
+            router.push("/dashboard/videos");
         } catch (err) {
             setError(
                 err instanceof Error
@@ -199,6 +194,11 @@ export function SeriesCard({ series }: SeriesCardProps) {
                             Generating…
                         </div>
                     )}
+                    {series.status === "failed" && (
+                        <div className="absolute inset-x-0 bottom-0 bg-red-600/90 px-3 py-1.5 text-center text-xs font-semibold text-white">
+                            Generation failed
+                        </div>
+                    )}
                     {paused && (
                         <div className="absolute inset-x-0 bottom-0 bg-gray-900/75 px-3 py-1.5 text-center text-xs font-semibold text-white">
                             Paused
@@ -225,7 +225,11 @@ export function SeriesCard({ series }: SeriesCardProps) {
                             variant="outline"
                             size="sm"
                             className="w-full rounded-xl"
-                            onClick={() => setVideosOpen(true)}
+                            onClick={() =>
+                                router.push(
+                                    `/dashboard/videos?series=${series.id}`
+                                )
+                            }
                         >
                             <Film className="h-4 w-4" />
                             View generated videos
@@ -246,6 +250,11 @@ export function SeriesCard({ series }: SeriesCardProps) {
                                     <Loader2 className="h-4 w-4 animate-spin" />
                                     Generating…
                                 </>
+                            ) : series.status === "failed" ? (
+                                <>
+                                    <Sparkles className="h-4 w-4" />
+                                    Retry generation
+                                </>
                             ) : (
                                 <>
                                     <Sparkles className="h-4 w-4" />
@@ -256,27 +265,6 @@ export function SeriesCard({ series }: SeriesCardProps) {
                     </div>
                 </div>
             </article>
-
-            <Dialog open={videosOpen} onOpenChange={setVideosOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>{series.seriesName}</DialogTitle>
-                        <DialogDescription>
-                            Videos generated for this series will appear here.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 py-10 text-center">
-                        <Film className="mb-3 h-10 w-10 text-gray-300" />
-                        <p className="text-sm font-medium text-gray-600">
-                            No videos yet
-                        </p>
-                        <p className="mt-1 max-w-xs text-xs text-gray-400">
-                            Use Generate video to create your first short for this
-                            series.
-                        </p>
-                    </div>
-                </DialogContent>
-            </Dialog>
 
             <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
                 <AlertDialogContent>

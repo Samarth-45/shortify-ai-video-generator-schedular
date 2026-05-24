@@ -70,3 +70,32 @@ export async function fetchSeriesById(
         error: null,
     };
 }
+
+/** Dev-only: used when invoking the function manually from Inngest with empty payload */
+export async function fetchLatestSeriesIdsForDev(): Promise<{
+    seriesId: string;
+    clerkUserId: string;
+} | null> {
+    let supabase;
+    try {
+        supabase = createAdminClient();
+    } catch {
+        return null;
+    }
+
+    const { data, error } = await supabase
+        .from("series")
+        .select("id, clerk_user_id")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (error || !data) {
+        return null;
+    }
+
+    return {
+        seriesId: data.id,
+        clerkUserId: data.clerk_user_id,
+    };
+}
