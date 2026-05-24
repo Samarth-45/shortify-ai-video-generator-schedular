@@ -77,3 +77,8 @@ alter table public.series enable row level security;
 --   check (status in ('active', 'scheduled', 'generating', 'published', 'failed', 'cancelled'));
 -- alter table public.series alter column status set default 'active';
 -- update public.series set status = 'active' where status = 'scheduled';
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Generated videos (assets from Inngest pipeline) — see migrations/
+-- ─────────────────────────────────────────────────────────────────────────────
+-- generated_videos + generated_video_scenes (script, audio, captions, scene images)
