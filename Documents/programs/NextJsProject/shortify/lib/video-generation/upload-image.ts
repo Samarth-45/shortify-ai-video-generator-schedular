@@ -43,9 +43,18 @@ export async function persistRemoteImage(
     sceneNumber: number,
     remoteUrl: string
 ): Promise<string> {
-    const buffer = await downloadImage(remoteUrl);
-    const extension = remoteUrl.includes(".jpg") || remoteUrl.includes(".jpeg")
-        ? "jpg"
-        : "png";
-    return uploadGeneratedImage(seriesId, sceneNumber, buffer, extension);
+    try {
+        const buffer = await downloadImage(remoteUrl);
+        const extension =
+            remoteUrl.includes(".jpg") || remoteUrl.includes(".jpeg")
+                ? "jpg"
+                : "png";
+        return uploadGeneratedImage(seriesId, sceneNumber, buffer, extension);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.warn(
+            `[upload-image] Scene ${sceneNumber}: storage upload failed (${message}). Using remote URL.`
+        );
+        return remoteUrl;
+    }
 }

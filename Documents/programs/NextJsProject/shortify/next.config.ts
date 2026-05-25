@@ -8,6 +8,22 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: projectRoot,
+  // Remotion / rspack use native .node binaries — must not be webpack-bundled by Next.js
+  serverExternalPackages: [
+    "@supabase/supabase-js",
+    "@supabase/ssr",
+    "replicate",
+    "@remotion/bundler",
+    "@remotion/renderer",
+    "@remotion/lambda",
+    "@remotion/lambda-client",
+    "@remotion/cli",
+    "@remotion/compositor-darwin-arm64",
+    "remotion",
+    "@rspack/core",
+    "@rspack/binding",
+    "@rspack/binding-darwin-arm64",
+  ],
   images: {
     remotePatterns: [
       {

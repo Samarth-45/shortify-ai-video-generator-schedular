@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { fetchSeriesById } from "@/lib/series-db";
+import { resetStuckGeneration } from "@/lib/generation-failure";
 import {
     deleteSeriesOwnedByUser,
     updateSeriesFromForm,
@@ -64,6 +65,23 @@ export async function PATCH(req: Request, context: RouteContext) {
 
     const action =
         "action" in body ? (body as { action?: string }).action : undefined;
+
+    if (action === "reset-generation") {
+        try {
+            const status = await resetStuckGeneration(id, userId);
+            return NextResponse.json({ status });
+        } catch (err) {
+            return NextResponse.json(
+                {
+                    error:
+                        err instanceof Error
+                            ? err.message
+                            : "Failed to reset series",
+                },
+                { status: 500 }
+            );
+        }
+    }
 
     if (action === "pause" || action === "resume") {
         const nextStatus: SeriesStatus =
@@ -146,7 +164,7 @@ export async function PATCH(req: Request, context: RouteContext) {
     return NextResponse.json(
         {
             error:
-                "Provide action (pause|resume), full series form fields, or a valid status",
+                "Provide action (pause|resume|reset-generation), full series form fields, or a valid status",
         },
         { status: 400 }
     );

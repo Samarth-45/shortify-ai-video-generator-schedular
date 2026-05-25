@@ -1,7 +1,6 @@
 import { Suspense } from "react";
-import { currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { requireUserId } from "@/lib/clerk-session";
 import { VideosPageContent } from "../_components/videos-page-content";
 
 function VideosLoading() {
@@ -14,11 +13,7 @@ function VideosLoading() {
 }
 
 export default async function VideosPage() {
-    const user = await currentUser();
-
-    if (!user) {
-        redirect("/sign-in");
-    }
+    await requireUserId();
 
     return (
         <Suspense fallback={<VideosLoading />}>

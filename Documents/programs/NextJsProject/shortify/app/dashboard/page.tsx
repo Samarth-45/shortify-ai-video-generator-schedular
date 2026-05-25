@@ -1,15 +1,11 @@
-import { currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { syncUserToSupabase } from "@/app/actions/sync-user";
+import { requireUserId, safeCurrentUser } from "@/lib/clerk-session";
 import { DashboardSeriesSection } from "./_components/dashboard-series-section";
 import Link from "next/link";
 
 export default async function DashboardPage() {
-    const user = await currentUser();
-
-    if (!user) {
-        redirect("/sign-in");
-    }
+    await requireUserId();
+    const user = await safeCurrentUser();
 
     await syncUserToSupabase();
 
@@ -19,7 +15,7 @@ export default async function DashboardPage() {
                 <h1 className="text-2xl font-bold text-gray-900">
                     Welcome back,{" "}
                     <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                        {user.firstName || "Creator"}
+                        {user?.firstName || "Creator"}
                     </span>
                     ! 👋
                 </h1>

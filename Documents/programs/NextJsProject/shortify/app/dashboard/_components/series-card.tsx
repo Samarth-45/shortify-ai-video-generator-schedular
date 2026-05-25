@@ -128,6 +128,30 @@ export function SeriesCard({ series }: SeriesCardProps) {
         }
     }
 
+    async function handleResetGeneration() {
+        setError(null);
+        try {
+            const res = await fetch(`/api/series/${series.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "reset-generation" }),
+            });
+            const payload = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(
+                    payload.error ?? "Failed to reset generation state"
+                );
+            }
+            refreshSeries();
+        } catch (err) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Failed to reset generation state"
+            );
+        }
+    }
+
     return (
         <>
             <article className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-shadow hover:shadow-md">
@@ -220,6 +244,18 @@ export function SeriesCard({ series }: SeriesCardProps) {
                     )}
 
                     <div className="mt-4 flex flex-col gap-2">
+                        {series.status === "generating" && (
+                            <p className="text-xs text-violet-600">
+                                Pipeline running… If this stays stuck after a
+                                failure in Inngest, cancel below.
+                            </p>
+                        )}
+                        {series.status === "failed" && (
+                            <p className="text-xs text-red-600">
+                                Last generation failed. Check Inngest for the
+                                error, then retry.
+                            </p>
+                        )}
                         <Button
                             type="button"
                             variant="outline"
@@ -234,6 +270,17 @@ export function SeriesCard({ series }: SeriesCardProps) {
                             <Film className="h-4 w-4" />
                             View generated videos
                         </Button>
+                        {series.status === "generating" && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="w-full rounded-xl border-red-200 text-red-600 hover:bg-red-50"
+                                onClick={handleResetGeneration}
+                            >
+                                Cancel generation
+                            </Button>
+                        )}
                         <Button
                             type="button"
                             size="sm"

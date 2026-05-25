@@ -15,10 +15,10 @@ function stripInngestMetadata(data: unknown): unknown {
         return data;
     }
 
-    const record = data as Record<string, unknown>;
-    const { _inngest: _ignored, ...rest } = record;
+    const record = { ...(data as Record<string, unknown>) };
+    delete record._inngest;
 
-    return Object.keys(rest).length > 0 ? rest : data;
+    return Object.keys(record).length > 0 ? record : data;
 }
 
 export function parseGenerateVideoEventData(

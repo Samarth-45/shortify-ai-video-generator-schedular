@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
     Ghost,
     Flame,
@@ -15,8 +15,6 @@ import {
     Sparkles,
     Pencil,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
 const availableNiches = [
     {
         id: "scary-stories",
@@ -134,12 +132,11 @@ export function NicheSelection({
     );
     const [customNiche, setCustomNiche] = useState("");
 
-    useEffect(() => {
-        if (selectedNiche?.startsWith("custom:")) {
-            setActiveTab("custom");
-            setCustomNiche(selectedNiche.slice("custom:".length));
-        }
-    }, [selectedNiche]);
+    const parentCustomNiche = selectedNiche?.startsWith("custom:")
+        ? selectedNiche.slice("custom:".length)
+        : null;
+    const tab = parentCustomNiche !== null ? "custom" : activeTab;
+    const customNicheValue = parentCustomNiche ?? customNiche;
 
     return (
         <div className="mx-auto max-w-3xl">
@@ -156,7 +153,7 @@ export function NicheSelection({
                 <button
                     onClick={() => setActiveTab("available")}
                     className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all duration-200
-            ${activeTab === "available"
+            ${tab === "available"
                             ? "bg-white text-gray-900 shadow-sm"
                             : "text-gray-500 hover:text-gray-700"
                         }`}
@@ -167,7 +164,7 @@ export function NicheSelection({
                 <button
                     onClick={() => setActiveTab("custom")}
                     className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all duration-200
-            ${activeTab === "custom"
+            ${tab === "custom"
                             ? "bg-white text-gray-900 shadow-sm"
                             : "text-gray-500 hover:text-gray-700"
                         }`}
@@ -178,7 +175,7 @@ export function NicheSelection({
             </div>
 
             {/* Available Niches Tab */}
-            {activeTab === "available" && (
+            {tab === "available" && (
                 <div className="h-[420px] overflow-y-auto rounded-2xl border border-gray-100 bg-white p-2 shadow-sm custom-scrollbar">
                     <div className="space-y-2">
                         {availableNiches.map((niche) => {
@@ -242,13 +239,13 @@ export function NicheSelection({
             )}
 
             {/* Custom Niche Tab */}
-            {activeTab === "custom" && (
+            {tab === "custom" && (
                 <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Describe your niche
                     </label>
                     <textarea
-                        value={customNiche}
+                        value={customNicheValue}
                         onChange={(e) => {
                             setCustomNiche(e.target.value);
                             if (e.target.value.trim()) {
