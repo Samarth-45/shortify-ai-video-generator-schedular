@@ -27,11 +27,13 @@ export type VideoListItem = {
     id: string;
     title: string;
     createdAt: string;
+    updatedAt: string;
     status: string;
     seriesId: string;
     seriesName: string;
     seriesCategory: string;
     thumbnailUrl: string | null;
+    finalVideoUrl: string | null;
     durationSeconds: number | null;
     captionStyle: string;
 };
@@ -52,7 +54,7 @@ export async function fetchGeneratedVideosForUser(
     const { data: videos, error } = await supabase
         .from("generated_videos")
         .select(
-            "id, title, created_at, status, series_id, duration_seconds, caption_style"
+            "id, title, created_at, updated_at, status, series_id, duration_seconds, caption_style, final_video_url"
         )
         .eq("clerk_user_id", clerkUserId)
         .order("created_at", { ascending: false });
@@ -112,12 +114,14 @@ export async function fetchGeneratedVideosForUser(
                 id: videoId,
                 title: row.title as string,
                 createdAt: row.created_at as string,
+                updatedAt: row.updated_at as string,
                 status: row.status as string,
                 seriesId,
                 seriesName: seriesById.get(seriesId)?.name ?? "Unknown series",
                 seriesCategory:
                     seriesById.get(seriesId)?.category ?? "General",
                 thumbnailUrl: thumb?.image_url ?? null,
+                finalVideoUrl: (row.final_video_url as string | null) ?? null,
                 durationSeconds: row.duration_seconds as number | null,
                 captionStyle: row.caption_style as string,
             };
@@ -185,6 +189,140 @@ export async function updateGeneratedVideoStatus(
     }
 }
 
+export type GeneratedVideoRetryRecord = {
+    id: string;
+    seriesId: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export async function fetchGeneratedVideoForRetry(
+    videoId: string,
+    clerkUserId: string
+): Promise<GeneratedVideoRetryRecord | null> {
+    const supabase = createAdminClient();
+
+    const { data, error } = await supabase
+        .from("generated_videos")
+        .select("id, series_id, status, created_at, updated_at")
+        .eq("id", videoId)
+        .eq("clerk_user_id", clerkUserId)
+        .maybeSingle();
+
+    if (error) {
+        throw new Error(formatSupabaseError(error));
+    }
+
+    if (!data) {
+        return null;
+    }
+
+    return {
+        id: data.id as string,
+        seriesId: data.series_id as string,
+        status: data.status as string,
+        createdAt: data.created_at as string,
+        updatedAt: data.updated_at as string,
+    };
+}
+
+/** Clears partial assets and marks the row ready for a new Inngest run. */
+export async function resetGeneratedVideoForRetry(
+    videoId: string,
+    series: { seriesName: string; captionStyle: string }
+) {
+    const supabase = createAdminClient();
+
+    const { error } = await supabase
+        .from("generated_videos")
+        .update({
+            title: `Generating: ${series.seriesName}`,
+            script: "",
+            audio_url: "",
+            caption_url: null,
+            caption_style: series.captionStyle,
+            duration_seconds: null,
+            final_video_url: null,
+            status: "generating",
+        })
+        .eq("id", videoId);
+
+    if (error) {
+        throw new Error(formatSupabaseError(error));
+    }
+
+    await supabase
+        .from("generated_video_scenes")
+        .delete()
+        .eq("video_id", videoId);
+}
+
+export async function deleteGeneratedVideoOwnedByUser(
+    videoId: string,
+    clerkUserId: string
+): Promise<{ error: string | null }> {
+    const supabase = createAdminClient();
+
+    const { data, error: fetchError } = await supabase
+        .from("generated_videos")
+        .select("id")
+        .eq("id", videoId)
+        .eq("clerk_user_id", clerkUserId)
+        .maybeSingle();
+
+    if (fetchError) {
+        return { error: formatSupabaseError(fetchError) };
+    }
+    if (!data) {
+        return { error: "Video not found" };
+    }
+
+    const { error } = await supabase
+        .from("generated_videos")
+        .delete()
+        .eq("id", videoId)
+        .eq("clerk_user_id", clerkUserId);
+
+    if (error) {
+        return { error: formatSupabaseError(error) };
+    }
+
+    return { error: null };
+}
+
+export async function fetchGeneratedVideoForDownload(
+    videoId: string,
+    clerkUserId: string
+): Promise<{ title: string; finalVideoUrl: string } | null> {
+    const supabase = createAdminClient();
+
+    const { data, error } = await supabase
+        .from("generated_videos")
+        .select("title, final_video_url, status")
+        .eq("id", videoId)
+        .eq("clerk_user_id", clerkUserId)
+        .maybeSingle();
+
+    if (error) {
+        throw new Error(formatSupabaseError(error));
+    }
+
+    if (
+        !data ||
+        data.status !== "ready" ||
+        typeof data.final_video_url !== "string" ||
+        !data.final_video_url
+    ) {
+        return null;
+    }
+
+    return {
+        title: (data.title as string) || "video",
+        finalVideoUrl: data.final_video_url,
+    };
+}
+
 export async function completeGeneratedVideo(
     videoId: string | undefined,
     input: SaveGeneratedVideoInput
@@ -204,7 +342,7 @@ export async function completeGeneratedVideo(
             caption_url: input.captions.captionUrl,
             caption_style: input.captions.captionStyle,
             duration_seconds: input.captions.durationSeconds,
-            status: "ready",
+            status: "rendering",
         })
         .eq("id", videoId);
 
@@ -237,6 +375,25 @@ export async function completeGeneratedVideo(
     return { videoId, sceneCount: input.images.scenes.length };
 }
 
+export async function finalizeGeneratedVideo(
+    videoId: string,
+    finalVideoUrl: string
+) {
+    const supabase = createAdminClient();
+
+    const { error } = await supabase
+        .from("generated_videos")
+        .update({
+            final_video_url: finalVideoUrl,
+            status: "ready",
+        })
+        .eq("id", videoId);
+
+    if (error) {
+        throw new Error(formatSupabaseError(error));
+    }
+}
+
 export async function saveGeneratedVideoToDatabase(
     input: SaveGeneratedVideoInput
 ): Promise<{ videoId: string; sceneCount: number }> {
@@ -253,7 +410,7 @@ export async function saveGeneratedVideoToDatabase(
             caption_url: input.captions.captionUrl,
             caption_style: input.captions.captionStyle,
             duration_seconds: input.captions.durationSeconds,
-            status: "ready",
+            status: "rendering",
         })
         .select("id")
         .single();

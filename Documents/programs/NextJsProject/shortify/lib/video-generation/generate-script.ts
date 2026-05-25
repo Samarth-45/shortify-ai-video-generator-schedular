@@ -56,6 +56,7 @@ Requirements:
 3. Hook the viewer in the first 2 seconds.
 4. Provide a catchy video title (under 70 characters).
 5. Provide exactly ${min} to ${max} image prompts — one per scene. Each prompt must describe a single visual frame in ${style?.label ?? series.videoStyle} style, tied to the script, suitable for AI image generation. Include subject, setting, lighting, and mood.
+6. Image prompts MUST be family-friendly and pass strict AI safety filters: no violence, weapons, blood, injury, nudity, drugs, hate, political conflict, real celebrities, or readable text/watermarks. Prefer landscapes, objects, animals, or stylized characters in wholesome everyday settings.
 
 Return ONLY valid JSON matching the schema. No markdown fences, no commentary.`;
 }

@@ -43,8 +43,9 @@ export function VideosPageContent() {
         loadVideos();
     }, [loadVideos]);
 
-    const hasGeneratingVideos = videos.some(
-        (video) => video.status === "generating"
+    const hasInProgressVideos = videos.some(
+        (video) =>
+            video.status === "generating" || video.status === "rendering"
     );
 
     const displayedVideos = seriesFilter
@@ -52,14 +53,14 @@ export function VideosPageContent() {
         : videos;
 
     useEffect(() => {
-        if (!hasGeneratingVideos) return;
+        if (!hasInProgressVideos) return;
 
         const interval = setInterval(() => {
             void loadVideos();
         }, 4000);
 
         return () => clearInterval(interval);
-    }, [hasGeneratingVideos, loadVideos]);
+    }, [hasInProgressVideos, loadVideos]);
 
     return (
         <div className="space-y-8">
@@ -86,7 +87,12 @@ export function VideosPageContent() {
             ) : (
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {displayedVideos.map((video) => (
-                        <VideoCard key={video.id} video={video} />
+                        <VideoCard
+                            key={video.id}
+                            video={video}
+                            onRetryStarted={loadVideos}
+                            onDeleted={loadVideos}
+                        />
                     ))}
 
                     {displayedVideos.length === 0 && (

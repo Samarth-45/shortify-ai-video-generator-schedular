@@ -62,14 +62,29 @@ export async function POST(_req: Request, context: RouteContext) {
             eventIds: ids,
         });
     } catch (err) {
-        return NextResponse.json(
-            {
-                error:
-                    err instanceof Error
-                        ? err.message
-                        : "Database not configured",
-            },
-            { status: 500 }
-        );
+        const message =
+            err instanceof Error ? err.message : "Database not configured";
+        const causeCode =
+            err instanceof Error &&
+            err.cause &&
+            typeof err.cause === "object" &&
+            "code" in err.cause
+                ? String((err.cause as { code?: string }).code)
+                : "";
+
+        if (
+            message.includes("fetch failed") &&
+            (causeCode === "ECONNREFUSED" || process.env.INNGEST_DEV === "1")
+        ) {
+            return NextResponse.json(
+                {
+                    error:
+                        "Inngest dev server is not running. Start it with: npm run dev:inngest",
+                },
+                { status: 503 }
+            );
+        }
+
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }

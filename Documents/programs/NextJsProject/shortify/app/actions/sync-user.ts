@@ -1,14 +1,24 @@
 "use server";
 
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatSupabaseError } from "@/lib/supabase/format-error";
+import { safeCurrentUser } from "@/lib/clerk-session";
 
 export async function syncUserToSupabase() {
-    const user = await currentUser();
+    const { userId } = await auth();
+
+    if (!userId) {
+        return { success: false, error: "Not authenticated" };
+    }
+
+    const user = await safeCurrentUser();
 
     if (!user) {
-        return { success: false, error: "Not authenticated" };
+        return {
+            success: true,
+            message: "Skipped user sync (Clerk API temporarily unavailable)",
+        };
     }
 
     let supabase;
